@@ -27,7 +27,6 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   // Don't handle external requests (Gabster, etc)
   if (!event.request.url.startsWith(self.location.origin)) return;
-  if (event.request.url.includes('gabster')) return;
   
   event.respondWith(
     fetch(event.request)
