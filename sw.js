@@ -1,14 +1,1 @@
-const CACHE_NAME = 'easy-v1';
-self.addEventListener('install', event => {
-  self.skipWaiting();
-});
-self.addEventListener('activate', event => {
-  event.waitUntil(clients.claim());
-});
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    fetch(event.request).catch(() => {
-      return caches.match(event.request);
-    })
-  );
-});
+self.addEventListener('install', e=>self.skipWaiting()); self.addEventListener('activate', e=>clients.claim()); self.addEventListener('fetch', e=>{e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)))})
