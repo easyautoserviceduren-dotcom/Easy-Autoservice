@@ -1,42 +1,56 @@
-// Easy Auto Service - Service Worker v3 - GitHub Pages compatible
-const CACHE_NAME = 'easy-auto-v3';
-const CACHE_ASSETS = [
+const CACHE_NAME = 'easy-auto-v1';
+const urlsToCache = [
   './',
   './index.html',
-  './manifest.json',
-  './icon-192x192.png',
-  './icon-512x512.png'
+  './manifest.json'
 ];
 
-self.addEventListener('install', (event) => {
+// Install
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(urlsToCache))
+  );
   self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(CACHE_ASSETS))
-  );
 });
 
-self.addEventListener('activate', (event) => {
+// Activate - clean old caches
+self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then((keys) => 
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(name => {
+          if (name !== CACHE_NAME) return caches.delete(name);
+        })
+      );
+    })
   );
+  self.clients.claim();
 });
 
-self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
-  // Don't handle external requests (Gabster, etc)
-  if (!event.request.url.startsWith(self.location.origin)) return;
+// Fetch - Network first, fallback to cache (good for GitHub Pages)
+self.addEventListener('fetch', event => {
+  // Skip non-GET and chrome extensions
+  if (event.request.method !== 'GET' || !event.request.url.startsWith('http')) return;
   
   event.respondWith(
     fetch(event.request)
-      .then((response) => {
-        if (response.ok) {
+      .then(response => {
+        // Cache valid responses
+        if (response && response.status === 200 && response.type === 'basic') {
           const clone = response.clone();
-          caches.open(CACHE_NAME).then((c) => c.put(event.request, clone));
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
         }
         return response;
       })
-      .catch(() => caches.match(event.request).then(r => r || caches.match('./index.html')))
+      .catch(() => {
+        return caches.match(event.request).then(res => {
+          if (res) return res;
+          // If navigation fails, return index.html for SPA
+          if (event.request.mode === 'navigate') {
+            return caches.match('./index.html');
+          }
+        });
+      })
   );
 });
