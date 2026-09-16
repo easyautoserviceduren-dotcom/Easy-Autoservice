@@ -1,0 +1,15 @@
+{
+  "appId": "com.easyautoservice.duren",
+  "appName": "Easy Autoservice Düren",
+  "webDir": "www",
+  "server": {
+    "url": "https://easyautoservice.netlify.app",
+    "cleartext": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#0a0a0a"
+    }
+  }
+}
